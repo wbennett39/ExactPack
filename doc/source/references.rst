@@ -10,15 +10,28 @@
 References
 ==========
 
+.. [Bdzil]
+   Bdzil, J. B., R. J. Henninger, and J. W. Walter, Test Problems for DSD2D, LA-14277, 2006.
+
+.. [Chisnell1998]
+   Chisnell, R.F.,
+   An Analytic Description of Converging Shock Waves,
+   J. Fluid Mech. 354, pp. 357-375 (1998).
+
+.. [Cockburn1997]
+   B. Cockburn, C. Johnson, C.-W. Shu,
+   *Advanced Numerical Approximation on Nonlinear Hyperbolic Equations*,
+   Lecture Notes in Mathematics, 1997.
+
 .. [Coggeshall1991]
    S. V. Coggeshall,
    *Analytic solutions of hydrodynamics equations*,
    Phys. Fluids A **3** (1991) 757.
 
 .. [Dawes2015]
-  A Dawes, 
-  *3D Multi-Material Polyhedral Methods for Diffusion*, 
-  MultiMat Conference, Warzberg, Germany (2015).    
+   A Dawes, 
+   *3D Multi-Material Polyhedral Methods for Diffusion*, 
+   MultiMat Conference, Warzberg, Germany (2015).    
    
 .. [Dawes2016]
    A. Dawes, C. Malone, M. Shashkov,
@@ -35,6 +48,11 @@ References
    *Level 1 V. & V. Test Problem 10: Escape of High Explosive Products*,
    UCRL-ID-150418, Lawrence Livermore National Laboratory (2002).
 
+.. [Ferguson2017]
+   J. Ferguson, J. Morel and R. Lowrie
+   *The equilibrium-diffusion limit for radiation hydrodynamics*,
+   Journal of Quantitative Spectroscopy and Radiative Transfer, 202 (2017) 176-186
+
 .. [Fickett1974]
    W. Fickett and C. Rivard,
    *Test Problems for Hydrocodes*,
@@ -50,14 +68,34 @@ References
    *Noh's constant-velocity shock problem revisited*,
    Shock Waves **7** (1997) 255.
 
+.. [GottliebGroth1988]
+   J.J. Gottlieb and C.P.T. Groth,
+   *Assessment of Riemann Solvers for Unsteady One-Dimensional Inviscid Flows for Perfect Gases*,
+   Journal of Computational Physics, **78** (1988) 437.
+
 .. [Guderley1942]
-  G. Guderley,
-  Luftahrtforschung **19** (1942) 302.
+   G. Guderley,
+   Luftahrtforschung **19** (1942) 302.
 
 .. [Guderley2012]
    Scott D. Ramsey, James R. Kamm, and John H. Bolstad,
    *The Guderley problem revisited*,
    International Journal of Computational Fluid Dynamics **26** (2012) 79.
+
+.. [Guess1957]
+   H. Sen and A. Guess,
+   *Radiation effects in shock-wave structure*
+   Physical Review **108** (1957) 560.
+
+.. [Heaslet1963]
+   Heaslet and Baldwin,
+   M. Heaslet and B. Baldwin,
+   *Predictions of the structure of radiation-resisted shock waves*,
+   Physics of Fluids **6** (1963) 781.
+
+.. [Hutchens2009]   
+   G J Hutchens, *A Generalized Set of Heat Conduction Test Problems*,
+   LA-UR-09-01692, Los Alamos National Laboratory (2009).   
 
 .. [Kamm2000]
    James R. Kamm,
@@ -91,20 +129,72 @@ References
    *HE Burn Table Verification Problems*,
    LA-UR-11-03096, Los Alamos National Laboratory (2011).
 
+.. [Kidder1974]
+   R.E. Kidder,
+   *Laser-Driven Compression of Hollow Shells: Power requirements and
+   Stability Limitations*,
+   Nucl. Fusion **14** (1974) 53.
+
+.. [Kidder1976]
+   R.E. Kidder,
+   *Energy gain of laser-compressed pellets: a simple model calculation*,
+   Nucl. Fusion **16** (1976) 33.
+
 .. [Kirkpatrick2004]
    R. Kirkpatrick, C. Wingate, and J.R. Kamm,
    *HE Burn Test Problem*,
    X-3-19U (2004).
 
+.. [Lazarus1981]
+   Lazarus, R.B.,
+   Self-Similar Solutions for Converging Shocks and Collapsing Cavities,
+   SIAM J. NUMER. ANAL. 18.2 (1981) 316.
+
+.. [Lazarus1982]
+   Lazarus, R.B, 
+   Erratum: Self-Similar Solutions for Converging Shocks and Collapsing Cavities,
+   SIAM J. Numer Anal. 19, p. 1090 (1982)
+
+.. [Lee2013]
+   B.J. Lee, E. Toro, C. Castro and N. Nikiforakis,
+   *Adaptive Osher-type scheme for the Euler equations with highly nonlinear equations of state*,
+   Journal of Computational Physics, **246** (2013) 165.
+
+.. [Lieberman2019] 
+   Evan J. Lieberman, Xiaodong Liu, Nathaniel R. Morgan, Darby J. Luscher, and Donald E. Burton,
+   *A higher-order Lagrangian discontinuous Galerkin hydrodynamic method for solid dynamics*,
+   CMAME **353** (2019) 467-490.
+
+.. [LoraClavijo2013]
+   F. LoraClavijo, J. Cruz-Perez, F. Guzman and J. Gonzalez,
+   *Exact solution of the 1D riemann problem in Newtonian and relativistic hydrodynamics*,
+   Revista Mexicana de Fisica E, **59** (2013) 28.
+
+.. [Lowrie2007]
+   R. Lowrie and R. Rauenzahn,
+   *Radiative shock solutions in the equilibrium diffusion limit*
+   Shock Waves **18** (2007) 445.
+
+.. [Lowrie2008]
+   R. Lowrie and J. Edwards,
+   *Radiative shock solutions with grey nonequilibrium diffusion*
+   Shock Waves **18** (2008) 129.
+
+.. [MenikoffPlohr1989]
+   R. Menikoff and B. Plohr,
+   *The Riemann problem for fluid flow of real materials*,
+   Reviews of Modern Physics, **61**, (1989) 1.
+
 .. [Noh1987]
-   W. F. Noh, *Errors for Calculations of Strong Shocks Using an
-   Artificial Viscosity and an Artificial Heat Flux*,
+   W. F. Noh,
+   *Errors for Calculations of Strong Shocks Using an Artificial Viscosity and an Artificial Heat Flux*,
    JCP **72** (1987) 78-120.
 
-.. [Hutchens2009]   
-   G J Hutchens, *A Generalized Set of Heat Conduction Test Problems*,
-   LA-UR-09-01692, Los Alamos National Laboratory (2009).   
-   
+.. [Ramsey17]
+   Scott Ramsey, Z. M. Boyd, and S.C. Burnett, 
+   *Solution of the Noh problem using the universal symmetry of the gas dynamics equations*, 
+   Shock Waves **27** (2017) 477-485. 
+
 .. [Reinicke1991] P. Reinicke and J. Meyer-ter-Vehn,
    *The point explosion with heat conduction*,
    Phys. Fluids A **3** (1991) 1807.
@@ -113,7 +203,12 @@ References
    L.I. Sedov,
    *Similarity and Dimensional Methods in Mechanics*,
    Academic Press, New York, NY, p. 147 ff. (1959).   
-   
+
+.. [Shyue2001]
+   K. Shyue,
+   *A Fluid-Mixture Type Algorithm for Compressible Multicomponent Flow with Mie-Gruneisen Equation of State*,
+   Journal of Computational Physics **171** (2001) 678.
+
 .. [Su1996]
    Bingjing Su and Gordon L. Olson,
    Benchmark Results for the Non-equilibrium Marshak Diffusion Problem,
@@ -123,3 +218,8 @@ References
    Francis X. Timmes, Galen Gisler, and George M. Hrbek,
    *Automated Analyses of the Tri-Lab Verification Test Suite on Uniform and Adaptive Grids for Code Project A*,
    LA-UR-05-6865, Los Alamos National Laboratory (2005).
+
+.. [Udaykumar2003] 
+   H.S. Udaykumar, L. Tran, D.M. Belk, and K.J. Vanden,
+   *An Eulerian method for computation of multimaterial impact with ENO shock-capturing and sharp interfaces*,
+   JCP **186** (2003) 136-177.
