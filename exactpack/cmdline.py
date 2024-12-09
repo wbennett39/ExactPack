@@ -1,6 +1,7 @@
 import argparse
 import importlib
 import sys
+sys.path.append('/opt/anaconda3/ExactPack')
 
 import numpy
 
@@ -60,39 +61,8 @@ mistaken for an argument to --params.
                 webbrowser.open("file://{}/{}".format(path, fn), new=1, autoraise=True)
                 sys.exit()
 
-    if args.list_solvers:
-        for solver in exactpack.discover_solvers():
-            print solver[10:]
-        sys.exit()
-
-    # Get the solver name
-    try:
-        name = args.solver.split('.')
-        mod = importlib.import_module('.'.join([''] + name[:-1]), 'exactpack')
-        solver = getattr(mod, name[-1])
-    except:
-        print "Can't find requested module {}".format(args.solver)
-        sys.exit(-1)
-
-    # Run the requested command
-    kwargs = {}
-    if args.params:
-        for p in args.params:
-            key, val = p.split("=")
-            kwargs[key] = float(val)
-    soln = solver(**kwargs)(numpy.linspace(0, 1.0, 500), 0.6)
-
-    if args.info:
-        print solver.__doc__
-
-    if args.plot:
-        import matplotlib.pyplot as plt
-        soln.plot()
-        plt.show()
-        
-    if args.dump:
-
-        soln.dump(args.dump[0])
+#   s
+#s
 
 if __name__=='__main__':
     main()            

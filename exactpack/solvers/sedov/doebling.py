@@ -84,6 +84,11 @@ class Sedov(ExactSolver):
         self.denom2 = 2.0*self.gamm1 + self.geometry - self.gamma*self.omega
         self.denom3 = self.geometry * (2.0 - self.gamma) - self.omega
 
+        self.P = []
+        self.v_list = []
+        self.l_fun_list = []
+        self.g_fun_list = []
+
         # shock-jump velocity
 
         self.v2 = 4 / (self.xg2*self.gamp1)
@@ -99,7 +104,7 @@ class Sedov(ExactSolver):
             self.solution_type = 'standard'
         elif self.v2 > self.vstar + osmall:
             self.solution_type = 'vacuum'
-
+        # print(self.solution_type)
         # Check for special singularities,
         # options are 'omega2', 'omega3' and 'none'
 
@@ -134,7 +139,9 @@ class Sedov(ExactSolver):
                                               2.0 * (2.0 + self.geometry *
                                                      self.gamm1))
         self.e_val = 0.5 * (2.0 + self.geometry * self.gamm1)
-
+        # print(self.a_val, self.b_val, self)
+        # print(self.a0, self.a1, self.a2, self.a3, self.a4, self.a5, 'alpha0-alpha5')
+        # print(self.a_val, self.b_val, self.c_val, self.d_val, 'a through d')
         # Evaluate the energy integrals
         # the singular case can be done by hand; save some cpu cycles
         # Kamm equations 80, 81, and 85
@@ -178,7 +185,7 @@ class Sedov(ExactSolver):
                 self.alpha = (self.geometry - 1.0) * math.pi *\
                     (self.eval1 + 2.0 * self.eval2 / self.gamm1)
 
-    def _run(self, r, t, npts=3001, vtol=1.e-8):
+    def _run(self, r, t, npts=101, vtol=1.e-14):
 
         # Time must be greater than zero
         if t <= 0.:
@@ -188,6 +195,8 @@ class Sedov(ExactSolver):
         # spaced between radius of 0.0 and max(r)
 
         r_eval = np.linspace(0.0, max(r), npts)[-1::-1]
+
+        self.r_pnts = r_eval
 
         # Initialize arrays for physical variables and Sedov functions
 
@@ -299,6 +308,7 @@ class Sedov(ExactSolver):
                     vwant[i] = sci_opt.fminbound(
                         self.sed_lam_min, vmin, vmax, xtol=1.e-30,
                         maxfun=1000, disp=True)
+                    # print(vwant[i])
 
                     # Compute Sedov functions at vwant
                     l_fun[i], dlamdv[i], f_fun[i], g_fun[i], h_fun[i] =\
@@ -313,6 +323,9 @@ class Sedov(ExactSolver):
                 density[i], velocity[i], pressure[i],\
                     specific_internal_energy[i], sound_speed[i] =\
                     self.physical(f_fun[i], g_fun[i], h_fun[i])
+                
+                
+
 
             # if outside the shock, solution is equal to inital conditions
             else:
@@ -325,8 +338,15 @@ class Sedov(ExactSolver):
             i += 1
 
         # Truncate solution vectors according to how many evaluations were made
+        self.f_fun_list = f_fun[0:i-1]
+        self.h_fun_list = h_fun[0:i-1]
+        self.g_fun_list = g_fun[0:i-1]
+        self.l_fun_list = l_fun[0:i-1]
+        
+        
 
         r_eval = r_eval[0:i-1]
+        
         density = density[0:i-1]
         velocity = velocity[0:i-1]
         pressure = pressure[0:i-1]
@@ -343,16 +363,28 @@ class Sedov(ExactSolver):
                 self.sedov_funcs_vacuum()
         else:
             self.lam_want = 0.  # the origin
-            vwant = sci_opt.fminbound(self.sed_lam_min, vmin, vmax,
+            vwanto = sci_opt.fminbound(self.sed_lam_min, vmin, vmax,
                                       xtol=1.e-30, maxfun=1000, disp=True)
+            self.vwanto = vwanto
             l_funo, dlamdvo, f_funo, g_funo, h_funo =\
-                self.sedov_funcs_standard(vwant)
+                self.sedov_funcs_standard(vwanto)
 
         # Evaluate physical solution at origin point and append to result
 
         deno, velo, preso, sieo, sso = self.physical(f_funo, g_funo, h_funo)
+        self.f_fun_list = np.append(self.f_fun_list, f_funo)
+        self.l_fun_list = np.append(self.l_fun_list, l_funo)
+        self.g_fun_list = np.append(self.g_fun_list, g_funo)
+        self.h_fun_list = np.append(self.h_fun_list, h_funo)
+        self.vlist = vwant[0:i-1]
+        self.vlist = np.append(self.vlist, vwanto)
 
+        
         r_eval = np.append(r_eval, 0.)
+        
+        self.r_pnts = r_eval
+
+        
         density = np.append(density, deno)
         velocity = np.append(velocity, 0.0)
         pressure = np.append(pressure, preso)
@@ -456,6 +488,8 @@ class Sedov(ExactSolver):
             g_fun = x1**(self.a0*self.omega) * x2**pp1 * x4**pp2 * np.exp(pp3)
             h_fun = x1**(self.a0*self.geometry) * x4**pp4 * np.exp(pp3)
 
+          
+
         # for the standard or vacuum case not in the hole
         # kamm equations 38-41
         else:
@@ -468,6 +502,14 @@ class Sedov(ExactSolver):
                 x3**(self.a4 + self.a1 * self.omega) * x4**self.a5
             h_fun = x1**(self.a0*self.geometry) *\
                 x3**(self.a4+self.a1*(self.omega-2.0))*x4**(1.0 + self.a5)
+            myg =  (0.14581612994701457*(1. - 1.2*v)**2.7777777777777777*(-1. + 2.1*v)**0.5555555555555556)/(1. - 1.5*v)**3.3333333333333335
+            # print(g_fun, myg, v)
+        # print(g_fun, 'g', v)
+        # R = g_fun * 6
+        # self.l_fun_list = np.append(self.l_fun_list,l_fun)
+        # self.g_fun_list = np.append(self.g_fun_list,g_fun)
+        # self.v_list = np.append(self.v_list,v)
+        # self.vlist.append(v)
 
         return l_fun, dlamdv, f_fun, g_fun, h_fun
 

@@ -168,8 +168,8 @@ class JumpCondition(object):
         self.description = description
 
         self._vars = {}
-        for key, val in kwargs.iteritems():
-            self._vars[key] = Jump(val)
+#        for key, val in kwargs.iteritems():
+#            self._vars[key] = Jump(val)
 
     def __getattr__(self, name):
 
@@ -221,9 +221,9 @@ class ExactSolver(object):
     def __init__(self, **params):
         
         # Check that all params are in the self.parameters list
-        if not params.viewkeys() <= set(self.parameters):
-            raise ValueError("Unknown parameters: "
-                             +",".join(params.viewkeys() - set(self.parameters)))
+#        if not params.viewkeys() <= set(self.parameters):
+#            raise ValueError("Unknown parameters: "
+#                             +",".join(params.viewkeys() - set(self.parameters)))
 
         self.__dict__.update(params)
 
@@ -341,7 +341,7 @@ class ExactSolution(numpy.recarray):
         # exactpack can be imported on systems without matplotlib if
         # no plotting is done during the script.
         # 3. The performance hit should be minimal
-        from analysis.plotting import plot
+        from .analysis.plotting import plot
 
         plot(self, name, **kwargs)
 
