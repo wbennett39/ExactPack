@@ -171,33 +171,47 @@ class greySn_RadShock(greyNED_RadShock):
         self.Im = self.Sn_profile.Im
         Nested_Class = NestedSn()
         nested_phi = np.zeros((Nested_Class.ns_list.size, self.Sn_profile.x.size))
+        nested_P = np.zeros((Nested_Class.ns_list.size, self.Sn_profile.x.size))
+        VEF = np.zeros((Nested_Class.ns_list.size, self.Sn_profile.x.size))
         for ix in range(self.Sn_profile.x.size):
                 res = Nested_Class.make_nested_phi(self.Im[:, ix]) 
                 # print(np.shape(res[0]), 'res shape')
 
-                nested_phi[:,ix] = 2 * np.pi * res[0]
-        Tr = self.Tref *(nested_phi / self.ar )**.25
+                nested_phi[:,ix] = 4 * np.pi * res[0]
+                nested_P[:,ix] = 4 * np.pi * res[2]
+                VEF[:,ix] = nested_P[:,ix] /nested_phi[:,ix]
+
+        Tr = self.Tref *(nested_phi  )**.25
         # print(nested_phi)
+        print(self.ar, 'ar')
         print(np.shape(nested_phi), 'nested phi shape')
         x = self.Sn_profile.x
-        plt.plot(x, Tr[0, :])
-        plt.plot(x, Tr[1, :])
-        plt.plot(x, Tr[2, :])
-        plt.plot(x, self.Sn_profile.Tr, 'k-')
+        plt.plot(-x, Tr[0, :])
+        plt.plot(-x, Tr[1, :])
+        plt.plot(-x, Tr[2, :])
+        plt.plot(-x, self.Sn_profile.Tr * self.Tref, 'k-')
+        plt.xlim(-0.002, 0.004)
+        print(self.Sn_profile.Tr/Tr)
+        # assert 0
 
 
         plt.figure(2)
         RMSE_vals = np.zeros(Nested_Class.ns_list.size-1)
         Richardson_vals = np.zeros((Nested_Class.ns_list.size-1, self.Sn_profile.x.size))
+        VEF_vals_Richardson = np.zeros((Nested_Class.ns_list.size-1))
+        VEF_Q = np.zeros((Nested_Class.ns_list.size-1))
         for ix in range(Nested_Class.ns_list.size-1):
             RMSE_vals[ix] = RMSE(nested_phi[:,ix], nested_phi[:,-1])
         for ix in range(2,Nested_Class.ns_list.size):
             xdata = Nested_Class.ns_list[:ix]
-            
+            VEF_Q[ix-1] = np.sum(VEF[ix,:]-1/3)
+            VEF_vals_Richardson[ix-1] = convergence_estimator(xdata, VEF_Q[:ix], target = Nested_Class.ns_list[ix-1], method = 'richardson')
+
             for ixx in range(self.Sn_profile.x.size):
                 ydata = nested_phi[:ix, ixx]
                 Richardson_vals[ix-1, ixx] = convergence_estimator(xdata, ydata, target = Nested_Class.ns_list[ix-1], method = 'richardson')
         plt.loglog(Nested_Class.ns_list[:-1], RMSE_vals)
+        plt.savefig('NestedSn_Tr_converge.pdf')
         # plt.loglog(Nested_Class.ns_list[1:], Richardson_vals[:, int(self.Sn_profile.x.size/2)])
         plt.show()
         plt.figure(3)
@@ -205,7 +219,16 @@ class greySn_RadShock(greyNED_RadShock):
         for ix in range(Nested_Class.ns_list.size-1):
             meanRichardson[ix] = np.mean(Richardson_vals[ix,:])
         plt.loglog(Nested_Class.ns_list[1:], meanRichardson)
+        plt.savefig('NestedSn_meanTr_converge.pdf')
         plt.show()
+        print(VEF_Q, 'VEF_Q')
+        plt.figure(4)
+        plt.loglog(Nested_Class.ns_list[1:], VEF_vals_Richardson)
+        plt.show()
+
+
+        
+        # VEF = np.sum()
 
 
             
@@ -215,6 +238,7 @@ class greySn_RadShock(greyNED_RadShock):
             
 
 class Shock_2Tie(IEShock):
+    
     
     '''
     Define the ion-electron shock problem, and drive the solution.
@@ -235,9 +259,9 @@ class Shock_2Tie(IEShock):
 class NestedSn:
     
     def __init__(self):
-        self.ns_list = np.array([2,6,16])
+        self.ns_list = np.array([2,6,16, 46])
         self.xs_mat = np.zeros((self.ns_list.size, self.ns_list[-1] ))
-        self.N_ang = 16
+        self.N_ang = 46
         self.index_mat = np.zeros((self.ns_list.size, self.N_ang ))
         self.w_mat = np.zeros((self.ns_list.size, self.ns_list[-1] ))
         self.mus, self.ws = cc_quad(self.N_ang)
@@ -253,14 +277,17 @@ class NestedSn:
     def make_nested_phi(self, psi):
                 phi_list = np.zeros(self.ns_list.size)
                 Jp_list = np.zeros(self.ns_list.size)
+                P_list = np.zeros(self.ns_list.size)
                 # self.make_phi(psi, self.w_mat[-1])
                 # phi = np.sum(psi[:]*self.w_mat[-1])*0.5
                 phi = np.sum(psi[:]*self.ws)*0.5
                 J = np.sum(psi[:]*self.ws*self.mus)*0.5
+                P = np.sum(psi[:]*self.ws*self.mus*self.mus)*0.5
 
 
                 phi_list[-1] = phi
                 Jp_list[-1] = J
+                P_list[-1] = P
                 psi_old = psi 
                 for ix in range(2, self.ns_list.size+1):
               
@@ -271,6 +298,7 @@ class NestedSn:
                         # phi_list[-ix] = self.make_phi(psi_lower, self.w_mat[-ix, 0:self.ns_list[ix]])
                         phi_list[-ix] = np.sum(psi_lower[:]*self.w_mat[-ix, 0:self.ns_list[-ix]])*0.5
                         Jp_list[-ix] = np.sum(psi_lower[:]*self.w_mat[-ix, 0:self.ns_list[-ix]] * self.xs_mat[-ix, 0:self.ns_list[-ix]])*0.5
+                        P_list[-ix] = np.sum(psi_lower[:]*self.w_mat[-ix, 0:self.ns_list[-ix]] * self.xs_mat[-ix, 0:self.ns_list[-ix]]* self.xs_mat[-ix, 0:self.ns_list[-ix]])*0.5
 
                         # print(self.ns_list[-ix-1])
                         # print(self.w_mat[-ix-1, 0:self.ns_list[-ix-1]], 'ws')
@@ -281,7 +309,7 @@ class NestedSn:
                 print(phi_list, 'phi_list')
                 # print(phi_list[-1]-phi)
                 # print(len(phi_list))
-                return np.array(phi_list), np.array(Jp_list)
+                return np.array(phi_list), np.array(Jp_list), np.array(P_list)
 
     def make_lower_order_fluxes(self, psi):
         psi_new = []

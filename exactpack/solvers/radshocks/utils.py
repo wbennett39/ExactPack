@@ -1271,7 +1271,7 @@ class Sn_ShockProfiles(nED_ShockProfiles):
             F_RT += e_rt * mus[i]
             P_RT += e_rt * mus2[i]
         E_RT *= 2. * pi
-        print(E_RT)
+
 
         F_RT *= 2. * pi
         P_RT *= 2. * pi

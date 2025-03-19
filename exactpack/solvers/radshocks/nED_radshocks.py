@@ -295,7 +295,7 @@ class Sn_Solver(ExactSolver):
     eps_precursor_ASP = 1.e-6
     eps_relaxation_ASP = 1.e-6
     int_tol = 1.e-10
-    Sn = 16
+    Sn = 46
     f_tol = 1.e-4
     # I do not allow L to be set in the code, but this could easily be changed
     L = 1. # cm
