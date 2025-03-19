@@ -4,8 +4,11 @@ from matplotlib import rc
 rc('font', size=14)
 
 # import ExactPack solver and analysis tools
-from exactpack.solvers.suolson import SuOlson as mySuOlson
 
+import sys
+
+sys.path.append('/Users/wbennett/Documents/Github/ExactPack/')
+from exactpack.solvers.suolson import SuOlson as mySuOlson
 #####################################################################
 rmax = 20.0
 r = np.linspace(0.0, rmax, 1000)

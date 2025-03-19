@@ -2,10 +2,11 @@ r""" The radiative-shock solvers.
 """
 
 # from ...base import ExactSolver, ExactSolution
-from exactpack.base import ExactSolver, ExactSolution, print_when_verbose
+from exactpack.base import ExactSolver, ExactSolution#, print_when_verbose
 
 from exactpack.solvers.radshocks import radshock
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 class ED_Solver(ExactSolver):
@@ -61,7 +62,7 @@ class ED_Solver(ExactSolver):
         super(ED_Solver, self).__init__(**kwargs)
         self.setup_solver()
 
-    @print_when_verbose
+    # @print_when_verbose
     def setup_solver(self):
         # instantiate the ED solver, and 'drive' the solver (below)
         prob = radshock.greyED_RadShock(
@@ -95,7 +96,7 @@ class ED_Solver(ExactSolver):
         self.P0 = prob.P0
         self.__prob = prob
 
-    @print_when_verbose
+    # @print_when_verbose
     def _run(self, x, t):
         tmp_x = -np.flip(self.x) + t * self.sound * self.M0
         temperature = np.interp(x, tmp_x, np.flip(self.Tm))
@@ -177,7 +178,7 @@ class nED_Solver(ExactSolver):
         super(nED_Solver, self).__init__(**kwargs)
         self.setup_solver()
 
-    @print_when_verbose
+    # @print_when_verbose
     def setup_solver(self):
         prob = radshock.greyNED_RadShock(
                M0 = self.M0,
@@ -201,6 +202,10 @@ class nED_Solver(ExactSolver):
         self.x = prob.nED_profile.x
         self.Tm = prob.Tref * prob.nED_profile.Tm
         self.Tr = prob.Tref * prob.nED_profile.Tr
+        # plt.figure(1)
+        # plt.ion()
+        # plt.plot(self.x, self.Tr, 'k-')
+        # plt.show()
         self.Fr = prob.C0 * prob.ar * prob.Tref**4 * prob.nED_profile.Fr
         self.Density = prob.rho0 * prob.nED_profile.Density
         self.Speed = prob.sound * prob.nED_profile.Speed
@@ -214,7 +219,7 @@ class nED_Solver(ExactSolver):
         self.problem = prob.problem
         self.__prob = prob
 
-    @print_when_verbose
+    # @print_when_verbose
     def _run(self, x, t):
         tmp_x = -np.flip(self.x) + t * self.sound * self.M0
         temperature_mat = np.interp(x, tmp_x, np.flip(self.Tm))
@@ -300,7 +305,7 @@ class Sn_Solver(ExactSolver):
         super(Sn_Solver, self).__init__(**kwargs)
         self.setup_solver()
 
-    @print_when_verbose
+    # @print_when_verbose
     def setup_solver(self):
         prob = radshock.greySn_RadShock(
                M0 = self.M0,
@@ -323,6 +328,7 @@ class Sn_Solver(ExactSolver):
         self.x = prob.Sn_profile.x
         self.Tm = prob.Tref * prob.Sn_profile.Tm
         self.Tr = prob.Tref * prob.Sn_profile.Tr
+        print(prob.Sn_profile.Im)
         self.Fr = prob.C0 * prob.ar * prob.Tref**4 * prob.Sn_profile.Fr
         self.Density = prob.rho0 * prob.Sn_profile.Density
         self.Speed = prob.sound * prob.Sn_profile.Speed
@@ -336,7 +342,7 @@ class Sn_Solver(ExactSolver):
         self.P0 = prob.P0
         self.__prob = prob
 
-    @print_when_verbose
+    # @print_when_verbose
     def _run(self, x, t):
         tmp_x = -np.flip(self.x) + t * self.sound * self.M0
         temperature_mat = np.interp(x, tmp_x, np.flip(self.Tm))
@@ -405,7 +411,7 @@ class ie_Solver(ExactSolver):
         super(ie_Solver, self).__init__(**kwargs)
         self.setup_solver()
 
-    @print_when_verbose
+    # @print_when_verbose
     def setup_solver(self):
         prob = radshock.Shock_2Tie(
                M0 = self.M0,
@@ -437,7 +443,7 @@ class ie_Solver(ExactSolver):
         self.Fe = prob.IE_profile.Fe
         self.__prob = prob
 
-    @print_when_verbose
+    # @print_when_verbose
     def _run(self, x, t):
         tmp_x = -np.flip(self.x) + t * self.sound * self.M0
         temperature_ion = np.interp(x, tmp_x, np.flip(self.Ti))

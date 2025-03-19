@@ -1,13 +1,15 @@
 '''
 The docstring for radshock.
 '''
-
+import matplotlib.pyplot as plt
 import os, copy, numpy, scipy, pickle, scipy.integrate, scipy.interpolate
 import matplotlib.pyplot, importlib
 try:
     import utils
 except ImportError:
   from exactpack.solvers.radshocks import utils  
+import numpy as np
+from chaospy.quadrature import clenshaw_curtis
 importlib.reload(utils)
 
 # TOC:
@@ -165,8 +167,55 @@ class greySn_RadShock(greyNED_RadShock):
             print_stmnt  = 'The greySn_RadShock solution for M0 = '
             print_stmnt += str(self.M0) + ' failed to converge.'
             print(print_stmnt)
+        print(np.shape(self.Sn_profile.Im))
+        self.Im = self.Sn_profile.Im
+        Nested_Class = NestedSn()
+        nested_phi = np.zeros((Nested_Class.ns_list.size, self.Sn_profile.x.size))
+        for ix in range(self.Sn_profile.x.size):
+                res = Nested_Class.make_nested_phi(self.Im[:, ix]) 
+                # print(np.shape(res[0]), 'res shape')
+
+                nested_phi[:,ix] = 2 * np.pi * res[0]
+        Tr = self.Tref *(nested_phi / self.ar )**.25
+        # print(nested_phi)
+        print(np.shape(nested_phi), 'nested phi shape')
+        x = self.Sn_profile.x
+        plt.plot(x, Tr[0, :])
+        plt.plot(x, Tr[1, :])
+        plt.plot(x, Tr[2, :])
+        plt.plot(x, self.Sn_profile.Tr, 'k-')
+
+
+        plt.figure(2)
+        RMSE_vals = np.zeros(Nested_Class.ns_list.size-1)
+        Richardson_vals = np.zeros((Nested_Class.ns_list.size-1, self.Sn_profile.x.size))
+        for ix in range(Nested_Class.ns_list.size-1):
+            RMSE_vals[ix] = RMSE(nested_phi[:,ix], nested_phi[:,-1])
+        for ix in range(2,Nested_Class.ns_list.size):
+            xdata = Nested_Class.ns_list[:ix]
+            
+            for ixx in range(self.Sn_profile.x.size):
+                ydata = nested_phi[:ix, ixx]
+                Richardson_vals[ix-1, ixx] = convergence_estimator(xdata, ydata, target = Nested_Class.ns_list[ix-1], method = 'richardson')
+        plt.loglog(Nested_Class.ns_list[:-1], RMSE_vals)
+        # plt.loglog(Nested_Class.ns_list[1:], Richardson_vals[:, int(self.Sn_profile.x.size/2)])
+        plt.show()
+        plt.figure(3)
+        meanRichardson = np.zeros(Nested_Class.ns_list.size-1)
+        for ix in range(Nested_Class.ns_list.size-1):
+            meanRichardson[ix] = np.mean(Richardson_vals[ix,:])
+        plt.loglog(Nested_Class.ns_list[1:], meanRichardson)
+        plt.show()
+
+
+            
+        # plt.plot(x, nested_phi[3, :])
+        # plt.plot(x, nested_phi[4, :])
+        # plt.plot(x, nested_phi[5, :])
+            
 
 class Shock_2Tie(IEShock):
+    
     '''
     Define the ion-electron shock problem, and drive the solution.
     '''
@@ -179,3 +228,143 @@ class Shock_2Tie(IEShock):
           self.IE_profile = utils.IE_discontinuousShockProfiles(self)
           self.IE_profile.downstream_equilibrium()
           self.IE_profile.make_2T_solution()
+
+
+
+
+class NestedSn:
+    
+    def __init__(self):
+        self.ns_list = np.array([2,6,16])
+        self.xs_mat = np.zeros((self.ns_list.size, self.ns_list[-1] ))
+        self.N_ang = 16
+        self.index_mat = np.zeros((self.ns_list.size, self.N_ang ))
+        self.w_mat = np.zeros((self.ns_list.size, self.ns_list[-1] ))
+        self.mus, self.ws = cc_quad(self.N_ang)
+        self.weights_matrix()
+    
+    def weights_matrix(self):
+        for i in range(self.ns_list.size):
+                self.w_mat[i, 0:self.ns_list[i]] = cc_quad(self.ns_list[i])[1]
+                self.xs_mat[i, 0:self.ns_list[i]] = cc_quad(self.ns_list[i])[0]
+                igrab = False
+                ig = 0
+    
+    def make_nested_phi(self, psi):
+                phi_list = np.zeros(self.ns_list.size)
+                Jp_list = np.zeros(self.ns_list.size)
+                # self.make_phi(psi, self.w_mat[-1])
+                # phi = np.sum(psi[:]*self.w_mat[-1])*0.5
+                phi = np.sum(psi[:]*self.ws)*0.5
+                J = np.sum(psi[:]*self.ws*self.mus)*0.5
+
+
+                phi_list[-1] = phi
+                Jp_list[-1] = J
+                psi_old = psi 
+                for ix in range(2, self.ns_list.size+1):
+              
+                        psi_lower = self.make_lower_order_fluxes(psi_old)
+                        
+                        # print(psi_lower.size, 'psi l')
+                        # print(self.w_mat[-ix-1, 0:self.ns_list[-ix-1]])
+                        # phi_list[-ix] = self.make_phi(psi_lower, self.w_mat[-ix, 0:self.ns_list[ix]])
+                        phi_list[-ix] = np.sum(psi_lower[:]*self.w_mat[-ix, 0:self.ns_list[-ix]])*0.5
+                        Jp_list[-ix] = np.sum(psi_lower[:]*self.w_mat[-ix, 0:self.ns_list[-ix]] * self.xs_mat[-ix, 0:self.ns_list[-ix]])*0.5
+
+                        # print(self.ns_list[-ix-1])
+                        # print(self.w_mat[-ix-1, 0:self.ns_list[-ix-1]], 'ws')
+                        
+                        
+
+                        psi_old = psi_lower
+                print(phi_list, 'phi_list')
+                # print(phi_list[-1]-phi)
+                # print(len(phi_list))
+                return np.array(phi_list), np.array(Jp_list)
+
+    def make_lower_order_fluxes(self, psi):
+        psi_new = []
+        xs_test = []
+        count = 1
+        psi_new.append(psi[0])
+        xs_test.append(self.mus[0])
+        if psi.size == 6:
+            psi_new = np.array([psi[0], psi[-1]])
+        else:
+            for ix in range(1,psi.size):
+                if count%3 == 0:
+                    psi_new.append(psi[count])
+                    xs_test.append(self.mus[count])
+                    # count = 0
+                count += 1
+        # xs_test.append(self.mus[-1])
+        xs_test = np.array(xs_test)
+        # print(xs_test.size, 'xs size')
+        # psi_new.append(psi[-1])
+        # print(xs_test, 'xs')
+        return np.array(psi_new)
+    
+    def  wynn_epsilon_algorithm(self, S):
+        n = S.size
+        width = n-1
+        # print(width)
+        tableau = np.zeros((n + 1, width + 2))
+        tableau[:,0] = 0
+        tableau[1:,1] = S.copy() 
+        for w in range(2,width + 2):
+            for r in range(w,n+1):
+                #print(r,w)
+                # if abs(tableau[r,w-1] - tableau[r-1,w-1]) <= 1e-15:
+                #     print('potential working precision issue')
+                tableau[r,w] = tableau[r-1,w-2] + 1/(tableau[r,w-1] - tableau[r-1,w-1])
+        return tableau
+
+
+def cc_quad(N):
+    x, w= clenshaw_curtis(N-1,(-1,1))
+    return x[0], w
+
+
+def convergence_estimator(xdata, ydata, target = 256, method = 'linear_regression'):
+    if method == 'linear_regression':
+        # lastpoint = ydata[-1]
+        # ynew = np.log(np.abs(ydata[1:]-ydata[:-1]))
+        # xnew = np.log(np.abs(xdata[1:]-xdata[:-1]))
+        # a, b = np.polyfit(xnew, ynew,1)
+        # err_estimate = (np.exp(b) * np.abs(target-xdata[:-1])**a)[-1]
+        # print(err_estimate, 'err estimate')
+        ynew = np.log(np.abs(ydata[-1]-ydata[:-1]))
+        xnew = np.log(xdata[:-1])
+        a, b = np.polyfit(xnew, ynew,1)
+        c1 = np.exp(b)
+        err_estimate = c1 * target ** a
+
+        
+    elif method == 'difference':
+        # err_estimate = np.abs(ydata[-1] - ydata[-2]) /(xdata[-1]-xdata[-2]) 
+        
+        # alpha = np.abs(ydata[-1] - ydata[-2]) *xdata[-2]
+        # err_estimate = alpha/target
+
+        # err_estimate = np.abs(ydata[-1] - ydata[-2]) / np.abs(xdata[-2]-xdata[-1])/target*xdata[-2]*xdata[-1]
+        err_estimate = np.abs(ydata[-1]-ydata[-2])
+    
+    
+    elif method == 'richardson':
+        ynew = np.log(np.abs(ydata[-1]-ydata[:-1]))
+        xnew = np.log(xdata[:-1])
+        a, b = np.polyfit(xnew, ynew,1)
+        c1 = np.exp(b)
+        k0 = -a
+        h = 1/ xdata[-2]
+        t = h * xdata[-1]
+        A1 = (t**k0 * ydata[-1] -ydata[-2]) / (t**k0 - 1)
+        err_estimate = np.abs(ydata[-1] - A1)
+
+    return err_estimate    # return a
+
+
+
+def RMSE(l1,l2):
+    return np.sqrt(np.mean((l1-l2)**2))

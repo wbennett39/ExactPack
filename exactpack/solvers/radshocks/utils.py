@@ -2,7 +2,7 @@
 Because this is the first item in the file, this is a docstring.
 The (!) difference is that 'help' on this file will grab this docstring, and return it to the terminal (useful!).  The comments below go into overhead, but otherwise are unaccessible (useless!).  Use docstrings to explain how to use file/function/class/method...'  Use comments for longterm maintenance to describe internal methods of code.
 """
-
+import numpy as np
 # TOC:
 # BasicShockProfile(object)
 #   def __init__(self, incoming)
@@ -48,6 +48,11 @@ The (!) difference is that 'help' on this file will grab this docstring, and ret
 
 import os, copy, numpy, scipy.optimize, scipy.integrate
 import matplotlib.pyplot
+from chaospy.quadrature import clenshaw_curtis
+
+def cc_quad(N):
+    x, w= clenshaw_curtis(N-1,(-1,1))
+    return x[0], w
 
 class BasicShockProfile(object):
     '''
@@ -1125,7 +1130,10 @@ class Sn_ShockProfiles(nED_ShockProfiles):
         Tf4 = Tf * Tf * Tf * Tf
         x_RT_size = numpy.size(self.x_RT)
         if (self.f_iters == 0):
-            self.mus, self.weights = numpy.polynomial.legendre.leggauss(Sn)
+            # self.mus, self.weights = numpy.polynomial.legendre.leggauss(Sn)
+            self.mus, self.weights = cc_quad(Sn)
+            print(self.mus, self.weights)
+            # assert 0
         Im = numpy.zeros((Sn, x_RT_size))
         mus = self.mus
         weights = self.weights
@@ -1241,6 +1249,7 @@ class Sn_ShockProfiles(nED_ShockProfiles):
         print_stmnt += 'absval1_keep = ' + str(absval1_keep) + '\n'
         print_stmnt += '\n'
         print_stmnt += 'leaving integrate_Sn' + '\n'
+        print(np.shape(self.Im), 'angular flux shape')
 
     def Sn_angular_moments(self):
         print_stmnt = '\n'
@@ -1254,6 +1263,7 @@ class Sn_ShockProfiles(nED_ShockProfiles):
         mus = self.mus
         mus2 = mus * mus
         Im = self.Im
+
         weights = self.weights
         for i in range(Sn):
             e_rt = weights[i] * Im[i,:]
@@ -1261,6 +1271,8 @@ class Sn_ShockProfiles(nED_ShockProfiles):
             F_RT += e_rt * mus[i]
             P_RT += e_rt * mus2[i]
         E_RT *= 2. * pi
+        print(E_RT)
+
         F_RT *= 2. * pi
         P_RT *= 2. * pi
         f = P_RT / E_RT
