@@ -4,6 +4,8 @@ The docstring for radshock.
 import matplotlib.pyplot as plt
 import os, copy, numpy, scipy, pickle, scipy.integrate, scipy.interpolate
 import matplotlib.pyplot, importlib
+import scipy
+import scipy.integrate as integrate
 try:
     import utils
 except ImportError:
@@ -205,19 +207,26 @@ class greySn_RadShock(greyNED_RadShock):
         Richardson_vals = np.zeros((Nested_Class.ns_list.size-1, self.Sn_profile.x_RT.size))
         VEF_vals_Richardson = np.zeros((Nested_Class.ns_list.size-1))
         VEF_Q = np.zeros((Nested_Class.ns_list.size))
-        VEF_diff = np.zeros((Nested_Class.ns_list.size))
+        VEF_diff = np.zeros((Nested_Class.ns_list.size-1))
         VEF_err_estimate_wynn = np.zeros((Nested_Class.ns_list.size-1))
         for ix in range(Nested_Class.ns_list.size-1):
             RMSE_vals[ix] = RMSE(nested_phi[:,ix], nested_phi[:,-1])
         for ix in range(0,Nested_Class.ns_list.size):
             xdata = Nested_Class.ns_list[:ix]
             if ix >=1:
-                VEF_Q[ix] = np.sum(np.abs(VEF[ix,:]-1/3))
+                interp_VEF = scipy.interpolate.interp1d(x, VEF[ix, :])
+                integrand = lambda x: interp_VEF(x) -1/3
+                print(x[0], 'a')
+                print(x[-1], 'b')
+                VEF_Q[ix] = integrate.quad(integrand, x[0], x[-1])[0]
+
+                # VEF_Q[ix] = np.sum(np.abs(VEF[ix,:]-1/3))
             if ix >= 2:
                 VEF_vals_Richardson[ix-1] = convergence_estimator(xdata, VEF_Q[:ix], target = Nested_Class.ns_list[ix-1], method = 'richardson')
                 VEF_diff[ix-1] = convergence_estimator(xdata, VEF_Q[:ix], target = Nested_Class.ns_list[ix-1], method = 'difference')
             VEF_tableau = wynn_epsilon_algorithm(VEF_Q[0:ix+1])
             print(VEF_tableau)
+            print(VEF_diff, 'DIFF')
             if ix >= 2:
                 VEF_err_estimate_wynn[ix-1] = np.abs(VEF_tableau[3:,3][ix-3] - VEF_tableau[1:,1][ix-1] )
                 for ixx in range(self.Sn_profile.x.size):
@@ -239,9 +248,10 @@ class greySn_RadShock(greyNED_RadShock):
         plt.figure(4)
         plt.loglog(Nested_Class.ns_list[2:], VEF_vals_Richardson[1:], 'k:', label = 'Richardson')
         plt.loglog(Nested_Class.ns_list[2:], VEF_err_estimate_wynn[1:], 'k-x', label = r'Wynn-$\epsilon$')
-        plt.loglog(Nested_Class.ns_list[1:], VEF_diff[1:], 'k--', label = 'difference')
+        plt.loglog(Nested_Class.ns_list[2:], np.abs(VEF_diff[1:]), 'k--', label = 'difference')
         plt.xlabel(r'$S_N$ order', fontsize = 16)
         plt.ylabel('Error', fontsize = 16)
+        plt.legend()
         show_loglog('VEF_wynn_epsilon', 14, Nested_Class.ns_list[-1] * 1.1, choose_ticks=True, ticks = Nested_Class.ns_list)
         plt.show()
 
