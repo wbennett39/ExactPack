@@ -328,6 +328,9 @@ class Sn_Solver(ExactSolver):
         self.x = prob.Sn_profile.x
         self.Tm = prob.Tref * prob.Sn_profile.Tm
         self.Tr = prob.Tref * prob.Sn_profile.Tr
+        self.Im = prob.Sn_profile.Im
+        self.mus = prob.Sn_profile.mus
+        self.weights = prob.Sn_profile.weights
         print(prob.Sn_profile.Im)
         self.Fr = prob.C0 * prob.ar * prob.Tref**4 * prob.Sn_profile.Fr
         self.Density = prob.rho0 * prob.Sn_profile.Density
@@ -337,7 +340,12 @@ class Sn_Solver(ExactSolver):
         self.SIE = self.Pressure / self.Density / (self.gamma - 1.)
         self.RADE = prob.ar * self.Tr**4
         self.Sound_Speed = self.Speed / self.Mach
-        self.VEF = np.interp(self.x, prob.Sn_profile.x_RT, prob.Sn_profile.f)
+        # self.VEF = np.interp(self.x, prob.Sn_profile.x_RT, prob.Sn_profile.f)
+        VEF = np.zeros(prob.Sn_profile.x_RT.size)
+        for ix, xx in enumerate(prob.Sn_profile.x_RT):
+            VEF[ix] = np.sum(self.mus * self.mus * self.weights * self.Im[:,ix]) /  np.sum(self.weights * self.Im[:,ix])
+        
+        self.VEF = np.interp(self.x, prob.Sn_profile.x_RT, VEF)
         self.C0 = prob.C0
         self.P0 = prob.P0
         self.__prob = prob
